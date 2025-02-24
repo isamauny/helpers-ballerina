@@ -9,15 +9,15 @@ import ballerinax/openai.chat;
 
 configurable string OPENAI_KEY = ?;
 
-//configurable string host = "localhost";
-//configurable int port = 8081;
+configurable string host = "localhost";
+configurable int port = 8081;
 
 configurable string aiModel = "gpt-4o-mini";
 
 // Constants
 final int MAX_BASE64_STRING_SIZE = 100;
 
-listener http:Listener main_endpoint = new (8081, config = {host: "localhost"});
+listener http:Listener main_endpoint = new (port, config = {host});
 
 service / on main_endpoint {
     # Returns the client IP address.
