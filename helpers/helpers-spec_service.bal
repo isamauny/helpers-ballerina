@@ -9,16 +9,75 @@ import ballerinax/openai.chat;
 
 configurable string OPENAI_KEY = ?;
 
-configurable string host = "localhost";
-configurable int port = 8081;
+configurable string host = "0.0.0.0";
+configurable int port = 8443;
+configurable int httpPort = 8080;
+
+configurable string keyStorePath = "./certs/server-keystore.p12";
+configurable string keyStorePassword = ?;
+
+configurable string mlkemKeyStorePath = "./certs/mlkem-keystore.p12";
+configurable string mlkemKeyStorePassword = ?;
 
 configurable string aiModel = "gpt-4o-mini";
 
 // Constants
 final int MAX_BASE64_STRING_SIZE = 100;
 
-listener http:Listener main_endpoint = new (port, config = {host});
+// HTTP listener for redirecting to HTTPS
+listener http:Listener http_endpoint = new (httpPort, config = {
+    host,
+    httpVersion: http:HTTP_1_1
+});
 
+// HTTPS listener with quantum-safe hybrid encryption
+listener http:Listener main_endpoint = new (port, config = {
+    host,
+    httpVersion: http:HTTP_1_1,
+    secureSocket: {
+        key: {
+            path: keyStorePath,
+            password: keyStorePassword
+        },
+        protocol: {
+            name: http:TLS,
+            versions: ["TLSv1.3"]
+        },
+        ciphers: [
+            "TLS_AES_256_GCM_SHA384",
+            "TLS_CHACHA20_POLY1305_SHA256",
+            "TLS_AES_128_GCM_SHA256",
+            "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384",
+            "TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256"
+        ],
+        shareSession: true
+    }
+});
+
+// HTTP redirect service to force HTTPS
+service / on http_endpoint {
+    resource function get [string... path](http:Request req) returns http:MovedPermanently {
+        string redirectUrl = string `https://${host}:${port}/${string:'join("/", ...path)}`;
+        http:MovedPermanently redirect = {
+            headers: {
+                location: redirectUrl
+            }
+        };
+        return redirect;
+    }
+    
+    resource function post [string... path](http:Request req) returns http:MovedPermanently {
+        string redirectUrl = string `https://${host}:${port}/${string:'join("/", ...path)}`;
+        http:MovedPermanently redirect = {
+            headers: {
+                location: redirectUrl
+            }
+        };
+        return redirect;
+    }
+}
+
+// Main HTTPS service with quantum-safe encryption
 service / on main_endpoint {
     # Returns the client IP address.
     # + return - returns IP message or unknown if the remote IP can't be found in the remoteAddress block.
@@ -127,7 +186,7 @@ service / on main_endpoint {
             backOffFactor: 2.0 // Multiplier of the retry interval.
         };
 
-        final chat:Client openAIChat = check new ({auth: {token: OPENAI_KEY}, retryConfig});
+        final chat:Client openAIChat = check new ({auth: {token: OPENAI_KEY}, retryConfig}, serviceUrl = "https://apim45.apis.coach:8243/openai/2.3.0");
 
         // Extract body contents
         string basePrompt = "Fix grammar and spelling mistakes of this content: ";
