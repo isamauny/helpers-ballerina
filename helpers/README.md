@@ -48,6 +48,45 @@ The service will start with:
 - HTTPS on port 8443 (main service)
 - HTTP on port 8080 (redirects to HTTPS)
 
+### Installing as User Service
+
+To run the service at startup in user space:
+
+1. **Create service directory:**
+   ```bash
+   mkdir -p ~/.config/systemd/user
+   ```
+
+2. **Install user service:**
+   ```bash
+   cp helpers.service ~/.config/systemd/user/
+   systemctl --user daemon-reload
+   systemctl --user enable helpers
+   systemctl --user start helpers
+   ```
+
+3. **Enable lingering (starts at boot even when not logged in):**
+   ```bash
+   sudo loginctl enable-linger $USER
+   ```
+
+4. **Check status:**
+   ```bash
+   systemctl --user status helpers
+   ```
+
+### Converting Certbot PEM to P12
+
+If using Let's Encrypt certificates via certbot:
+
+```bash
+openssl pkcs12 -export -out certs/server-keystore.p12 \
+  -inkey /etc/letsencrypt/live/yourdomain.com/privkey.pem \
+  -in /etc/letsencrypt/live/yourdomain.com/cert.pem \
+  -certfile /etc/letsencrypt/live/yourdomain.com/chain.pem \
+  -name "server"
+```
+
 ## 📡 API Endpoints
 
 | Endpoint | Method | Description |
