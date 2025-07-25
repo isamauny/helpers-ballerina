@@ -1,0 +1,26 @@
+[Unit]
+Description=Helpers API - Ballerina HTTP Service
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+User=helpers
+Group=helpers
+WorkingDirectory=/opt/helpers
+ExecStart=/usr/bin/bal run
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=helpers
+
+# Security settings
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/helpers
+
+[Install]
+WantedBy=default.target
