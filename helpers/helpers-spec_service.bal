@@ -16,8 +16,8 @@ configurable int httpPort = 8080;
 configurable string keyStorePath = "./certs/server-keystore.p12";
 configurable string keyStorePassword = ?;
 
-configurable string mlkemKeyStorePath = "./certs/mlkem-keystore.p12";
-configurable string mlkemKeyStorePassword = ?;
+//configurable string mlkemKeyStorePath = "./certs/mlkem-keystore.p12";
+//configurable string mlkemKeyStorePassword = ?;
 
 configurable string aiModel = "gpt-4o-mini";
 
@@ -46,9 +46,7 @@ listener http:Listener main_endpoint = new (port, config = {
         ciphers: [
             "TLS_AES_256_GCM_SHA384",
             "TLS_CHACHA20_POLY1305_SHA256",
-            "TLS_AES_128_GCM_SHA256",
-            "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384",
-            "TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256"
+            "TLS_AES_128_GCM_SHA256"
         ],
         shareSession: true
     }
@@ -57,7 +55,13 @@ listener http:Listener main_endpoint = new (port, config = {
 // HTTP redirect service to force HTTPS
 service / on http_endpoint {
     resource function get [string... path](http:Request req) returns http:MovedPermanently {
-        string redirectUrl = string `https://${host}:${port}/${string:'join("/", ...path)}`;
+        // Use the Host header from the request to preserve the client's hostname
+        string|http:HeaderNotFoundError hostHeader = req.getHeader("Host");
+        string requestHost = hostHeader is string ? hostHeader : "localhost";
+        // Remove port from Host header if present (e.g., "example.com:8080" -> "example.com")
+        int? colonIndex = requestHost.indexOf(":");
+        string hostname = colonIndex is int ? requestHost.substring(0, colonIndex) : requestHost;
+        string redirectUrl = string `https://${hostname}:${port}/${string:'join("/", ...path)}`;
         http:MovedPermanently redirect = {
             headers: {
                 location: redirectUrl
@@ -65,9 +69,15 @@ service / on http_endpoint {
         };
         return redirect;
     }
-    
+
     resource function post [string... path](http:Request req) returns http:MovedPermanently {
-        string redirectUrl = string `https://${host}:${port}/${string:'join("/", ...path)}`;
+        // Use the Host header from the request to preserve the client's hostname
+        string|http:HeaderNotFoundError hostHeader = req.getHeader("Host");
+        string requestHost = hostHeader is string ? hostHeader : "localhost";
+        // Remove port from Host header if present (e.g., "example.com:8080" -> "example.com")
+        int? colonIndex = requestHost.indexOf(":");
+        string hostname = colonIndex is int ? requestHost.substring(0, colonIndex) : requestHost;
+        string redirectUrl = string `https://${hostname}:${port}/${string:'join("/", ...path)}`;
         http:MovedPermanently redirect = {
             headers: {
                 location: redirectUrl

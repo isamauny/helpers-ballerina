@@ -22,6 +22,9 @@ paths:
   /ai/spelling:
     post:
       operationId: postAiSpelling
+      tags:
+        - AI
+      description: "Correct text spelking errors using AI"
       requestBody:
         content:
           application/json:
@@ -55,6 +58,8 @@ paths:
       tags:
       - convert
       summary: Decodes base64url-encoded string.
+      description: Decodes base64url-encoded string.
+      operationId: decode
       parameters:
       - name: value
         in: path
@@ -78,6 +83,8 @@ paths:
       tags:
       - convert
       summary: Base64 encode input string .
+      description: Base64 encode input string .
+      operationId: encode
       parameters:
       - name: value
         in: path
@@ -101,6 +108,8 @@ paths:
       tags:
       - echo
       summary: Returns the client IP address.
+      description: Returns the client IP address.
+      operationId: getIP
       responses:
         "200":
           description: Get the client IP address.
@@ -115,6 +124,8 @@ paths:
       tags:
       - echo
       summary: Return the User-Agent header value
+      description: Return the User-Agent header value
+      operationId: getUA
       responses:
         "200":
           description: Get the request User-Agent header value.
@@ -129,6 +140,8 @@ paths:
       tags:
       - dynamic
       summary: Returns a unique ID as per UUID v4 spec
+      description: Returns a unique ID as per UUID v4 spec
+      operationId: getUUID
       responses:
         "200":
           description: Get a UUID V4.
