@@ -10,8 +10,8 @@ import ballerinax/openai.chat;
 configurable string OPENAI_KEY = ?;
 
 configurable string host = "0.0.0.0";
-configurable int port = 8443;
-configurable int httpPort = 8080;
+configurable int port = 9943;
+configurable int httpPort = 9980;
 
 configurable string keyStorePath = "./certs/server-keystore.p12";
 configurable string keyStorePassword = ?;
